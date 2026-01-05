@@ -1,0 +1,7 @@
+name = "parish-voting"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "VOTING_KV"
+id = "9ec597a29ffc4e75a80c525180216093"
