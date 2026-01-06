@@ -1,6 +1,9 @@
-const ADMIN_PASSWORD = 'parish-admin';
+import { LOGO_BASE64 } from './logo.js';
 
-const CANDIDATES = [
+const ADMIN_USERNAME = 'Skyabove@gmail.com';
+const ADMIN_PASSWORD = 'LoopLoop123@@';
+
+const INITIAL_CANDIDATES = [
   { id: 'candidate_1', name: 'Sharon Forester', position: 'Parish Council' },
   { id: 'candidate_2', name: 'Neil Dusek', position: 'Parish Council' },
   { id: 'candidate_3', name: 'Tina Seidel', position: 'Parish Council' },
@@ -10,7 +13,16 @@ const CANDIDATES = [
   { id: 'candidate_7', name: 'Micheal Goertz', position: 'Parish Council' },
 ];
 
-const HTML_PAGE = `<!DOCTYPE html>
+async function getCandidates(env) {
+  const stored = await env.VOTING_KV.get('candidates');
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return INITIAL_CANDIDATES;
+}
+
+function renderVotingPage(candidates) {
+  return \`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -28,6 +40,7 @@ const HTML_PAGE = `<!DOCTYPE html>
         <div class="inline-block bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-4">
           <span class="text-blue-200 text-sm font-medium">2026 Election</span>
         </div>
+        <img src="\${LOGO_BASE64}" alt="Parish Logo" class="h-24 mx-auto mb-6 rounded-lg shadow-lg">
         <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Parish Council Election</h1>
         <p class="text-blue-200" id="subtitle">Select your candidate and cast your vote</p>
       </div>
@@ -38,12 +51,15 @@ const HTML_PAGE = `<!DOCTYPE html>
       <div class="text-center mt-6 text-blue-200 text-sm">
         <p>Your vote is private and secure</p>
         <p class="mt-1 text-blue-300/60">Each device can only vote once</p>
+        <div class="mt-8 pt-6 border-t border-white/10">
+          <a href="/admin" class="text-blue-300/40 hover:text-blue-200 text-xs transition-colors">Admin Login</a>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    const CANDIDATES = ${JSON.stringify(CANDIDATES)};
+    const CANDIDATES = \${JSON.stringify(candidates)};
     let selectedCandidate = null;
     let hasVoted = false;
     let voteCounts = {};
@@ -93,10 +109,10 @@ const HTML_PAGE = `<!DOCTYPE html>
         btn.className = 'w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 border-gray-200 hover:border-blue-300 hover:bg-gray-50';
         btn.dataset.id = candidate.id;
         btn.innerHTML = \`
-          <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center border-gray-300" id="radio-\${candidate.id}"></div>
+          <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center border-gray-300" id="radio-\\\${candidate.id}"></div>
           <div>
-            <div class="font-medium text-gray-900">\${candidate.name}</div>
-            <div class="text-sm text-gray-500">\${candidate.position}</div>
+            <div class="font-medium text-gray-900">\\\${candidate.name}</div>
+            <div class="text-sm text-gray-500">\\\${candidate.position}</div>
           </div>
         \`;
         btn.onclick = () => selectCandidate(candidate.id);
@@ -133,7 +149,7 @@ const HTML_PAGE = `<!DOCTYPE html>
       
       if (!confirmMode) {
         area.innerHTML = \`
-          <button onclick="showConfirm()" id="continue-btn" class="\${selectedCandidate ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} w-full py-4 rounded-xl font-semibold text-lg transition-all" \${selectedCandidate ? '' : 'disabled'}>
+          <button onclick="showConfirm()" id="continue-btn" class="\\\${selectedCandidate ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} w-full py-4 rounded-xl font-semibold text-lg transition-all" \\\${selectedCandidate ? '' : 'disabled'}>
             Continue to Vote
           </button>
         \`;
@@ -144,7 +160,7 @@ const HTML_PAGE = `<!DOCTYPE html>
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p class="text-yellow-800 font-medium">Confirm Your Vote</p>
               <p class="text-yellow-700 text-sm mt-1">
-                You are voting for <strong>\${candidateName}</strong>. This action cannot be undone.
+                You are voting for <strong>\\\${candidateName}</strong>. This action cannot be undone.
               </p>
             </div>
             <div class="flex gap-3">
@@ -217,7 +233,7 @@ const HTML_PAGE = `<!DOCTYPE html>
         <div class="p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-800">Current Results</h2>
-            <span class="text-sm text-gray-500">\${totalVotes} total votes</span>
+            <span class="text-sm text-gray-500">\\\${totalVotes} total votes</span>
           </div>
           <div class="space-y-4">
       \`;
@@ -229,11 +245,11 @@ const HTML_PAGE = `<!DOCTYPE html>
         resultsHtml += \`
           <div class="relative">
             <div class="flex items-center justify-between mb-1">
-              <span class="font-medium text-gray-900">\${candidate.name}</span>
-              <span class="text-sm text-gray-600">\${votes} votes (\${percentage}%)</span>
+              <span class="font-medium text-gray-900">\\\${candidate.name}</span>
+              <span class="text-sm text-gray-600">\\\${votes} votes (\\\${percentage}%)</span>
             </div>
             <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: \${percentage}%"></div>
+              <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: \\\${percentage}%"></div>
             </div>
           </div>
         \`;
@@ -268,9 +284,11 @@ const HTML_PAGE = `<!DOCTYPE html>
     init();
   </script>
 </body>
-</html>`;
+</html>\`;
+}
 
-const ADMIN_HTML = \`<!DOCTYPE html>
+function renderAdminPage(candidates) {
+  return \`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -281,16 +299,23 @@ const ADMIN_HTML = \`<!DOCTYPE html>
 <body class="bg-gray-100 min-h-screen">
   <div id="login-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800">Admin Login</h2>
-      <input type="password" id="password-input" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-4 focus:border-blue-500 focus:outline-none" placeholder="Enter password">
+      <div class="text-center mb-6">
+        <img src="\${LOGO_BASE64}" alt="Logo" class="h-16 mx-auto mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
+      </div>
+      <input type="text" id="username-input" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-3 focus:border-blue-500 focus:outline-none" placeholder="Email Address">
+      <input type="password" id="password-input" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-4 focus:border-blue-500 focus:outline-none" placeholder="Password">
       <button onclick="login()" class="w-full bg-blue-600 text-white rounded-lg p-3 font-semibold hover:bg-blue-700 transition-colors">Login</button>
-      <p id="login-error" class="hidden text-red-500 mt-3 text-sm"></p>
+      <p id="login-error" class="hidden text-red-500 mt-3 text-sm text-center"></p>
     </div>
   </div>
 
   <div id="dashboard" class="hidden container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Election Dashboard</h1>
+      <div class="flex items-center gap-4">
+        <img src="\${LOGO_BASE64}" alt="Logo" class="h-10">
+        <h1 class="text-3xl font-bold text-gray-900">Election Dashboard</h1>
+      </div>
       <button onclick="logout()" class="text-gray-600 hover:text-gray-900">Logout</button>
     </div>
 
@@ -312,6 +337,16 @@ const ADMIN_HTML = \`<!DOCTYPE html>
         <button onclick="confirmReset()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 border border-red-200 transition-colors">
           Reset All
         </button>
+      </div>
+    </div>
+
+    <!-- Add Candidate -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+      <h3 class="font-semibold text-gray-800 mb-4">Add Candidate</h3>
+      <div class="flex gap-4">
+        <input type="text" id="new-name" placeholder="Candidate Name" class="flex-1 border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 outline-none">
+        <input type="text" id="new-pos" placeholder="Position (e.g. Council Member)" class="flex-1 border-2 border-gray-200 rounded-lg p-3 focus:border-blue-500 outline-none">
+        <button onclick="addCandidate()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700">Add</button>
       </div>
     </div>
 
@@ -345,7 +380,7 @@ const ADMIN_HTML = \`<!DOCTYPE html>
   </div>
 
   <script>
-    const CANDIDATES = ${JSON.stringify(CANDIDATES)};
+    const CANDIDATES = \${JSON.stringify(candidates)};
     let authToken = localStorage.getItem('adminToken');
 
     if (authToken) {
@@ -355,11 +390,13 @@ const ADMIN_HTML = \`<!DOCTYPE html>
     }
 
     async function login() {
+      const user = document.getElementById('username-input').value;
       const pwd = document.getElementById('password-input').value;
+      
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: pwd })
+        body: JSON.stringify({ username: user, password: pwd })
       });
       
       if (res.ok) {
@@ -370,7 +407,7 @@ const ADMIN_HTML = \`<!DOCTYPE html>
         loadData();
       } else {
         const err = document.getElementById('login-error');
-        err.textContent = 'Invalid password';
+        err.textContent = 'Invalid credentials';
         err.classList.remove('hidden');
       }
     }
@@ -396,6 +433,15 @@ const ADMIN_HTML = \`<!DOCTYPE html>
     }
 
     function renderDashboard(data) {
+      // Update local candidates list if changed
+      if (data.candidates) {
+        // Simple reload if candidates changed to refresh globals
+        if (JSON.stringify(CANDIDATES) !== JSON.stringify(data.candidates)) {
+           location.reload();
+           return;
+        }
+      }
+
       // Stats
       const total = Object.values(data.counts).reduce((a, b) => a + b, 0);
       document.getElementById('total-votes').textContent = total;
@@ -413,11 +459,11 @@ const ADMIN_HTML = \`<!DOCTYPE html>
         return \`
           <div>
             <div class="flex justify-between text-sm mb-1">
-              <span>\${c.name}</span>
-              <span class="font-medium">\${votes} (\${pct}%)</span>
+              <span>\\\${c.name}</span>
+              <span class="font-medium">\\\${votes} (\\\${pct}%)</span>
             </div>
             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-500 rounded-full" style="width: \${pct}%"></div>
+              <div class="h-full bg-blue-500 rounded-full" style="width: \\\${pct}%"></div>
             </div>
           </div>
         \`;
@@ -429,12 +475,35 @@ const ADMIN_HTML = \`<!DOCTYPE html>
         const c = CANDIDATES.find(kan => kan.id === v.candidateId);
         return \`
           <tr class="hover:bg-gray-50">
-            <td class="px-6 py-3">\${new Date(v.votedAt).toLocaleString()}</td>
-            <td class="px-6 py-3 font-mono text-xs">\${v.candidateId}</td>
-            <td class="px-6 py-3">\${c?.name || 'Unknown'}</td>
+            <td class="px-6 py-3">\\\${new Date(v.votedAt).toLocaleString()}</td>
+            <td class="px-6 py-3 font-mono text-xs">\\\${v.candidateId}</td>
+            <td class="px-6 py-3">\\\${c?.name || 'Unknown'}</td>
           </tr>
         \`;
       }).join('');
+    }
+
+    async function addCandidate() {
+      const name = document.getElementById('new-name').value;
+      const pos = document.getElementById('new-pos').value;
+      if (!name || !pos) return alert('Please fill in both fields');
+
+      const res = await fetch('/api/admin/candidates', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-admin-password': authToken 
+        },
+        body: JSON.stringify({ name, position: pos })
+      });
+
+      if (res.ok) {
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-pos').value = '';
+        loadData(); // Will trigger reload
+      } else {
+        alert('Failed to add candidate');
+      }
     }
 
     async function confirmReset() {
@@ -455,30 +524,34 @@ const ADMIN_HTML = \`<!DOCTYPE html>
   </script>
 </body>
 </html>\`;
+}
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
+
     // Get voter ID from cookie or create new one
     const cookies = request.headers.get('Cookie') || '';
     let voterId = cookies.match(/voter_id=([^;]+)/)?.[1];
-    
+
     if (!voterId) {
       voterId = crypto.randomUUID();
     }
+
+    // Load candidates
+    const CANDIDATES = await getCandidates(env);
 
     // API: Get status
     if (url.pathname === '/api/status') {
       const hasVoted = await env.VOTING_KV.get(`voted:${ voterId } `);
       const countsRaw = await env.VOTING_KV.get('vote_counts');
       const voteCounts = countsRaw ? JSON.parse(countsRaw) : {};
-      
+
       return new Response(JSON.stringify({ hasVoted: !!hasVoted, voteCounts }), {
         headers: {
           'Content-Type': 'application/json',
           'Set-Cookie': `voter_id = ${ voterId }; Path =/; Max-Age=31536000; SameSite=Strict`
-        }
+}
       });
     }
 
@@ -522,91 +595,111 @@ if (url.pathname === '/api/vote' && request.method === 'POST') {
       candidateId,
       votedAt: new Date().toISOString()
     }
+  });
 
-
-      return new Response(JSON.stringify({ success: true, voteCounts }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': `voter_id=${voterId}; Path=/; Max-Age=31536000; SameSite=Strict`
-      }
-    });
-  }
-
-    // ADMIN API ROUTES
-
-    // Admin Auth Check
-    if (url.pathname === '/api/admin/auth' && request.method === 'POST') {
-    const body = await request.json();
-    if (body.password === ADMIN_PASSWORD) {
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    return new Response('Unauthorized', { status: 401 });
-  }
-
-  // Admin Data List
-  if (url.pathname === '/api/admin/votes') {
-    const auth = request.headers.get('x-admin-password');
-    if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-
-    // List all votes (metadata only)
-    const votes = [];
-    let cursor = null;
-
-    do {
-      const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
-      votes.push(...list.keys.map(k => k.metadata).filter(Boolean)); // Filter out null metadata if old data exists
-      cursor = list.list_complete ? null : list.cursor;
-    } while (cursor);
-
-    // Sort by time desc
-    votes.sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt));
-
-    // Get counts
-    const countsRaw = await env.VOTING_KV.get('vote_counts');
-    const counts = countsRaw ? JSON.parse(countsRaw) : {};
-
-    return new Response(JSON.stringify({ votes, counts }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  // Admin Reset
-  if (url.pathname === '/api/admin/reset' && request.method === 'POST') {
-    const auth = request.headers.get('x-admin-password');
-    if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-
-    // Delete all votes
-    let cursor = null;
-    do {
-      const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
-      // KV doesn't support bulk delete, so we do it concurrently
-      await Promise.all(list.keys.map(key => env.VOTING_KV.delete(key.name)));
-      cursor = list.list_complete ? null : list.cursor;
-    } while (cursor);
-
-    // Reset counts
-    await env.VOTING_KV.delete('vote_counts');
-
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  // Serve Admin UI
-  if (url.pathname === '/admin') {
-    return new Response(ADMIN_HTML, {
-      headers: { 'Content-Type': 'text/html' }
-    });
-  }
-
-  // Serve the HTML page
-  return new Response(HTML_PAGE, {
+  return new Response(JSON.stringify({ success: true, voteCounts }), {
     headers: {
-      'Content-Type': 'text/html',
+      'Content-Type': 'application/json',
       'Set-Cookie': `voter_id=${voterId}; Path=/; Max-Age=31536000; SameSite=Strict`
     }
   });
 }
+
+// ADMIN API ROUTES
+
+// Admin Auth Check
+if (url.pathname === '/api/admin/auth' && request.method === 'POST') {
+  const body = await request.json();
+  if (body.username === ADMIN_USERNAME && body.password === ADMIN_PASSWORD) {
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  return new Response('Unauthorized', { status: 401 });
+}
+
+// Admin Data List
+if (url.pathname === '/api/admin/votes') {
+  const auth = request.headers.get('x-admin-password');
+  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+  // List all votes (metadata only)
+  const votes = [];
+  let cursor = null;
+
+  do {
+    const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
+    votes.push(...list.keys.map(k => k.metadata).filter(Boolean)); // Filter out null metadata if old data exists
+    cursor = list.list_complete ? null : list.cursor;
+  } while (cursor);
+
+  // Sort by time desc
+  votes.sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt));
+  return new Response(JSON.stringify({ votes, counts, candidates: CANDIDATES }), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Admin Add Candidate
+if (url.pathname === '/api/admin/candidates' && request.method === 'POST') {
+  const auth = request.headers.get('x-admin-password');
+  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+  const body = await request.json();
+  if (!body.name || !body.position) {
+    return new Response(JSON.stringify({ success: false, error: 'Missing fields' }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const newId = 'candidate_' + Date.now();
+  const newCandidate = { id: newId, name: body.name, position: body.position };
+
+  const currentCandidates = await getCandidates(env);
+  currentCandidates.push(newCandidate);
+
+  await env.VOTING_KV.put('candidates', JSON.stringify(currentCandidates));
+
+  return new Response(JSON.stringify({ success: true, candidates: currentCandidates }), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Admin Reset
+if (url.pathname === '/api/admin/reset' && request.method === 'POST') {
+  const auth = request.headers.get('x-admin-password');
+  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+  // Delete all votes
+  let cursor = null;
+  do {
+    const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
+    // KV doesn't support bulk delete, so we do it concurrently
+    await Promise.all(list.keys.map(key => env.VOTING_KV.delete(key.name)));
+    cursor = list.list_complete ? null : list.cursor;
+  } while (cursor);
+
+  // Reset counts
+  await env.VOTING_KV.delete('vote_counts');
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+// Serve Admin UI
+if (url.pathname === '/admin') {
+  return new Response(renderAdminPage(CANDIDATES), {
+    headers: { 'Content-Type': 'text/html' }
+  });
+}
+
+// Serve the HTML page
+return new Response(renderVotingPage(CANDIDATES), {
+  headers: {
+    'Content-Type': 'text/html',
+    'Set-Cookie': `voter_id=${voterId}; Path=/; Max-Age=31536000; SameSite=Strict`
+  }
+});
+  }
 };
