@@ -543,14 +543,14 @@ export default {
 
     // API: Get status
     if (url.pathname === '/api/status') {
-      const hasVoted = await env.VOTING_KV.get(`voted:${ voterId } `);
+      const hasVoted = await env.VOTING_KV.get('voted:' + voterId);
       const countsRaw = await env.VOTING_KV.get('vote_counts');
       const voteCounts = countsRaw ? JSON.parse(countsRaw) : {};
 
       return new Response(JSON.stringify({ hasVoted: !!hasVoted, voteCounts }), {
         headers: {
           'Content-Type': 'application/json',
-          'Set-Cookie': `voter_id = ${ voterId }; Path =/; Max-Age=31536000; SameSite=Strict`
+          'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
 }
       });
     }
@@ -558,7 +558,7 @@ export default {
 // API: Submit vote
 if (url.pathname === '/api/vote' && request.method === 'POST') {
   // Check if already voted
-  const hasVoted = await env.VOTING_KV.get(`voted:${voterId}`);
+  const hasVoted = await env.VOTING_KV.get('voted:' + voterId);
   if (hasVoted) {
     return new Response(JSON.stringify({ success: false, error: 'You have already voted.' }), {
       headers: { 'Content-Type': 'application/json' }
@@ -587,7 +587,7 @@ if (url.pathname === '/api/vote' && request.method === 'POST') {
 
   // Mark voter as having voted
   // We store metadata in the KV entry to allow listing votes without fetching values
-  await env.VOTING_KV.put(`voted:${voterId}`, JSON.stringify({
+  await env.VOTING_KV.put(`voted:${ voterId } `, JSON.stringify({
     candidateId,
     votedAt: new Date().toISOString()
   }), {
@@ -600,8 +600,8 @@ if (url.pathname === '/api/vote' && request.method === 'POST') {
   return new Response(JSON.stringify({ success: true, voteCounts }), {
     headers: {
       'Content-Type': 'application/json',
-      'Set-Cookie': `voter_id=${voterId}; Path=/; Max-Age=31536000; SameSite=Strict`
-    }
+      'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
+}
   });
 }
 
@@ -698,8 +698,8 @@ if (url.pathname === '/admin') {
 return new Response(renderVotingPage(CANDIDATES), {
   headers: {
     'Content-Type': 'text/html',
-    'Set-Cookie': `voter_id=${voterId}; Path=/; Max-Age=31536000; SameSite=Strict`
-  }
+    'Set-Cookie': `voter_id = ${ voterId }; Path =/; Max-Age=31536000; SameSite=Strict`
+}
 });
   }
 };
