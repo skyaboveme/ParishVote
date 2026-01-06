@@ -1,4 +1,4 @@
-name = "parish-voting"
+name = "parishvote"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
