@@ -587,7 +587,7 @@ if (url.pathname === '/api/vote' && request.method === 'POST') {
 
   // Mark voter as having voted
   // We store metadata in the KV entry to allow listing votes without fetching values
-  await env.VOTING_KV.put(`voted:${ voterId } `, JSON.stringify({
+  await env.VOTING_KV.put('voted:' + voterId, JSON.stringify({
     candidateId,
     votedAt: new Date().toISOString()
   }), {
