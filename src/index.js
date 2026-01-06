@@ -22,7 +22,7 @@ async function getCandidates(env) {
 }
 
 function renderVotingPage(candidates) {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -40,7 +40,7 @@ function renderVotingPage(candidates) {
         <div class="inline-block bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-4">
           <span class="text-blue-200 text-sm font-medium">2026 Election</span>
         </div>
-        <img src="\${LOGO_BASE64}" alt="Parish Logo" class="h-24 mx-auto mb-6 rounded-lg shadow-lg">
+        <img src="${LOGO_BASE64}" alt="Parish Logo" class="h-24 mx-auto mb-6 rounded-lg shadow-lg">
         <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Parish Council Election</h1>
         <p class="text-blue-200" id="subtitle">Select your candidate and cast your vote</p>
       </div>
@@ -59,7 +59,7 @@ function renderVotingPage(candidates) {
   </div>
 
   <script>
-    const CANDIDATES = \${JSON.stringify(candidates)};
+    const CANDIDATES = ${JSON.stringify(candidates)};
     let selectedCandidate = null;
     let hasVoted = false;
     let voteCounts = {};
@@ -109,10 +109,10 @@ function renderVotingPage(candidates) {
         btn.className = 'w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 border-gray-200 hover:border-blue-300 hover:bg-gray-50';
         btn.dataset.id = candidate.id;
         btn.innerHTML = \`
-          <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center border-gray-300" id="radio-\\\${candidate.id}"></div>
+          <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center border-gray-300" id="radio-\\${candidate.id}"></div>
           <div>
-            <div class="font-medium text-gray-900">\\\${candidate.name}</div>
-            <div class="text-sm text-gray-500">\\\${candidate.position}</div>
+            <div class="font-medium text-gray-900">\\${candidate.name}</div>
+            <div class="text-sm text-gray-500">\\${candidate.position}</div>
           </div>
         \`;
         btn.onclick = () => selectCandidate(candidate.id);
@@ -149,7 +149,7 @@ function renderVotingPage(candidates) {
       
       if (!confirmMode) {
         area.innerHTML = \`
-          <button onclick="showConfirm()" id="continue-btn" class="\\\${selectedCandidate ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} w-full py-4 rounded-xl font-semibold text-lg transition-all" \\\${selectedCandidate ? '' : 'disabled'}>
+          <button onclick="showConfirm()" id="continue-btn" class="\\${selectedCandidate ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' : 'bg-gray-300 text-gray-500 cursor-not-allowed'} w-full py-4 rounded-xl font-semibold text-lg transition-all" \\${selectedCandidate ? '' : 'disabled'}>
             Continue to Vote
           </button>
         \`;
@@ -160,7 +160,7 @@ function renderVotingPage(candidates) {
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p class="text-yellow-800 font-medium">Confirm Your Vote</p>
               <p class="text-yellow-700 text-sm mt-1">
-                You are voting for <strong>\\\${candidateName}</strong>. This action cannot be undone.
+                You are voting for <strong>\\${candidateName}</strong>. This action cannot be undone.
               </p>
             </div>
             <div class="flex gap-3">
@@ -233,7 +233,7 @@ function renderVotingPage(candidates) {
         <div class="p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-lg font-semibold text-gray-800">Current Results</h2>
-            <span class="text-sm text-gray-500">\\\${totalVotes} total votes</span>
+            <span class="text-sm text-gray-500">\\${totalVotes} total votes</span>
           </div>
           <div class="space-y-4">
       \`;
@@ -245,11 +245,11 @@ function renderVotingPage(candidates) {
         resultsHtml += \`
           <div class="relative">
             <div class="flex items-center justify-between mb-1">
-              <span class="font-medium text-gray-900">\\\${candidate.name}</span>
-              <span class="text-sm text-gray-600">\\\${votes} votes (\\\${percentage}%)</span>
+              <span class="font-medium text-gray-900">\\${candidate.name}</span>
+              <span class="text-sm text-gray-600">\\${votes} votes (\\${percentage}%)</span>
             </div>
             <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: \\\${percentage}%"></div>
+              <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500" style="width: \\${percentage}%"></div>
             </div>
           </div>
         \`;
@@ -284,11 +284,11 @@ function renderVotingPage(candidates) {
     init();
   </script>
 </body>
-</html>\`;
+</html>`;
 }
 
 function renderAdminPage(candidates) {
-  return \`<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -300,7 +300,7 @@ function renderAdminPage(candidates) {
   <div id="login-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl p-8 max-w-md w-full">
       <div class="text-center mb-6">
-        <img src="\${LOGO_BASE64}" alt="Logo" class="h-16 mx-auto mb-4">
+        <img src="${LOGO_BASE64}" alt="Logo" class="h-16 mx-auto mb-4">
         <h2 class="text-2xl font-bold text-gray-800">Admin Login</h2>
       </div>
       <input type="text" id="username-input" class="w-full border-2 border-gray-300 rounded-lg p-3 mb-3 focus:border-blue-500 focus:outline-none" placeholder="Email Address">
@@ -313,7 +313,7 @@ function renderAdminPage(candidates) {
   <div id="dashboard" class="hidden container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <div class="flex items-center gap-4">
-        <img src="\${LOGO_BASE64}" alt="Logo" class="h-10">
+        <img src="${LOGO_BASE64}" alt="Logo" class="h-10">
         <h1 class="text-3xl font-bold text-gray-900">Election Dashboard</h1>
       </div>
       <button onclick="logout()" class="text-gray-600 hover:text-gray-900">Logout</button>
@@ -380,7 +380,7 @@ function renderAdminPage(candidates) {
   </div>
 
   <script>
-    const CANDIDATES = \${JSON.stringify(candidates)};
+    const CANDIDATES = ${JSON.stringify(candidates)};
     let authToken = localStorage.getItem('adminToken');
 
     if (authToken) {
@@ -459,11 +459,11 @@ function renderAdminPage(candidates) {
         return \`
           <div>
             <div class="flex justify-between text-sm mb-1">
-              <span>\\\${c.name}</span>
-              <span class="font-medium">\\\${votes} (\\\${pct}%)</span>
+              <span>\\${c.name}</span>
+              <span class="font-medium">\\${votes} (\\${pct}%)</span>
             </div>
             <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-500 rounded-full" style="width: \\\${pct}%"></div>
+              <div class="h-full bg-blue-500 rounded-full" style="width: \\${pct}%"></div>
             </div>
           </div>
         \`;
@@ -475,9 +475,9 @@ function renderAdminPage(candidates) {
         const c = CANDIDATES.find(kan => kan.id === v.candidateId);
         return \`
           <tr class="hover:bg-gray-50">
-            <td class="px-6 py-3">\\\${new Date(v.votedAt).toLocaleString()}</td>
-            <td class="px-6 py-3 font-mono text-xs">\\\${v.candidateId}</td>
-            <td class="px-6 py-3">\\\${c?.name || 'Unknown'}</td>
+            <td class="px-6 py-3">\\${new Date(v.votedAt).toLocaleString()}</td>
+            <td class="px-6 py-3 font-mono text-xs">\\${v.candidateId}</td>
+            <td class="px-6 py-3">\\${c?.name || 'Unknown'}</td>
           </tr>
         \`;
       }).join('');
