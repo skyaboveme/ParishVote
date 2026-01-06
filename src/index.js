@@ -698,7 +698,7 @@ if (url.pathname === '/admin') {
 return new Response(renderVotingPage(CANDIDATES), {
   headers: {
     'Content-Type': 'text/html',
-    'Set-Cookie': `voter_id = ${ voterId }; Path =/; Max-Age=31536000; SameSite=Strict`
+    'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
 }
 });
   }
