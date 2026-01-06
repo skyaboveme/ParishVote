@@ -523,7 +523,7 @@ function renderAdminPage(candidates) {
     }
   </script>
 </body>
-</html>\`;
+</html>`;
 }
 
 export default {
@@ -551,155 +551,155 @@ export default {
         headers: {
           'Content-Type': 'application/json',
           'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
-}
+        }
       });
     }
 
-// API: Submit vote
-if (url.pathname === '/api/vote' && request.method === 'POST') {
-  // Check if already voted
-  const hasVoted = await env.VOTING_KV.get('voted:' + voterId);
-  if (hasVoted) {
-    return new Response(JSON.stringify({ success: false, error: 'You have already voted.' }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+    // API: Submit vote
+    if (url.pathname === '/api/vote' && request.method === 'POST') {
+      // Check if already voted
+      const hasVoted = await env.VOTING_KV.get('voted:' + voterId);
+      if (hasVoted) {
+        return new Response(JSON.stringify({ success: false, error: 'You have already voted.' }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
 
-  const body = await request.json();
-  const candidateId = body.candidateId;
+      const body = await request.json();
+      const candidateId = body.candidateId;
 
-  // Validate candidate
-  if (!CANDIDATES.find(c => c.id === candidateId)) {
-    return new Response(JSON.stringify({ success: false, error: 'Invalid candidate.' }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
+      // Validate candidate
+      if (!CANDIDATES.find(c => c.id === candidateId)) {
+        return new Response(JSON.stringify({ success: false, error: 'Invalid candidate.' }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
 
-  // Get current counts
-  const countsRaw = await env.VOTING_KV.get('vote_counts');
-  const voteCounts = countsRaw ? JSON.parse(countsRaw) : {};
+      // Get current counts
+      const countsRaw = await env.VOTING_KV.get('vote_counts');
+      const voteCounts = countsRaw ? JSON.parse(countsRaw) : {};
 
-  // Increment vote
-  voteCounts[candidateId] = (voteCounts[candidateId] || 0) + 1;
+      // Increment vote
+      voteCounts[candidateId] = (voteCounts[candidateId] || 0) + 1;
 
-  // Save updated counts
-  await env.VOTING_KV.put('vote_counts', JSON.stringify(voteCounts));
+      // Save updated counts
+      await env.VOTING_KV.put('vote_counts', JSON.stringify(voteCounts));
 
-  // Mark voter as having voted
-  // We store metadata in the KV entry to allow listing votes without fetching values
-  await env.VOTING_KV.put('voted:' + voterId, JSON.stringify({
-    candidateId,
-    votedAt: new Date().toISOString()
-  }), {
-    metadata: {
-      candidateId,
-      votedAt: new Date().toISOString()
+      // Mark voter as having voted
+      // We store metadata in the KV entry to allow listing votes without fetching values
+      await env.VOTING_KV.put('voted:' + voterId, JSON.stringify({
+        candidateId,
+        votedAt: new Date().toISOString()
+      }), {
+        metadata: {
+          candidateId,
+          votedAt: new Date().toISOString()
+        }
+      });
+
+      return new Response(JSON.stringify({ success: true, voteCounts }), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
+        }
+      });
     }
-  });
 
-  return new Response(JSON.stringify({ success: true, voteCounts }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
-}
-  });
-}
+    // ADMIN API ROUTES
 
-// ADMIN API ROUTES
+    // Admin Auth Check
+    if (url.pathname === '/api/admin/auth' && request.method === 'POST') {
+      const body = await request.json();
+      if (body.username === ADMIN_USERNAME && body.password === ADMIN_PASSWORD) {
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return new Response('Unauthorized', { status: 401 });
+    }
 
-// Admin Auth Check
-if (url.pathname === '/api/admin/auth' && request.method === 'POST') {
-  const body = await request.json();
-  if (body.username === ADMIN_USERNAME && body.password === ADMIN_PASSWORD) {
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' }
+    // Admin Data List
+    if (url.pathname === '/api/admin/votes') {
+      const auth = request.headers.get('x-admin-password');
+      if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+      // List all votes (metadata only)
+      const votes = [];
+      let cursor = null;
+
+      do {
+        const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
+        votes.push(...list.keys.map(k => k.metadata).filter(Boolean)); // Filter out null metadata if old data exists
+        cursor = list.list_complete ? null : list.cursor;
+      } while (cursor);
+
+      // Sort by time desc
+      votes.sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt));
+      return new Response(JSON.stringify({ votes, counts, candidates: CANDIDATES }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Admin Add Candidate
+    if (url.pathname === '/api/admin/candidates' && request.method === 'POST') {
+      const auth = request.headers.get('x-admin-password');
+      if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+      const body = await request.json();
+      if (!body.name || !body.position) {
+        return new Response(JSON.stringify({ success: false, error: 'Missing fields' }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      const newId = 'candidate_' + Date.now();
+      const newCandidate = { id: newId, name: body.name, position: body.position };
+
+      const currentCandidates = await getCandidates(env);
+      currentCandidates.push(newCandidate);
+
+      await env.VOTING_KV.put('candidates', JSON.stringify(currentCandidates));
+
+      return new Response(JSON.stringify({ success: true, candidates: currentCandidates }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Admin Reset
+    if (url.pathname === '/api/admin/reset' && request.method === 'POST') {
+      const auth = request.headers.get('x-admin-password');
+      if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
+
+      // Delete all votes
+      let cursor = null;
+      do {
+        const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
+        // KV doesn't support bulk delete, so we do it concurrently
+        await Promise.all(list.keys.map(key => env.VOTING_KV.delete(key.name)));
+        cursor = list.list_complete ? null : list.cursor;
+      } while (cursor);
+
+      // Reset counts
+      await env.VOTING_KV.delete('vote_counts');
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Serve Admin UI
+    if (url.pathname === '/admin') {
+      return new Response(renderAdminPage(CANDIDATES), {
+        headers: { 'Content-Type': 'text/html' }
+      });
+    }
+
+    // Serve the HTML page
+    return new Response(renderVotingPage(CANDIDATES), {
+      headers: {
+        'Content-Type': 'text/html',
+        'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
+      }
     });
-  }
-  return new Response('Unauthorized', { status: 401 });
-}
-
-// Admin Data List
-if (url.pathname === '/api/admin/votes') {
-  const auth = request.headers.get('x-admin-password');
-  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-
-  // List all votes (metadata only)
-  const votes = [];
-  let cursor = null;
-
-  do {
-    const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
-    votes.push(...list.keys.map(k => k.metadata).filter(Boolean)); // Filter out null metadata if old data exists
-    cursor = list.list_complete ? null : list.cursor;
-  } while (cursor);
-
-  // Sort by time desc
-  votes.sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt));
-  return new Response(JSON.stringify({ votes, counts, candidates: CANDIDATES }), {
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-// Admin Add Candidate
-if (url.pathname === '/api/admin/candidates' && request.method === 'POST') {
-  const auth = request.headers.get('x-admin-password');
-  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-
-  const body = await request.json();
-  if (!body.name || !body.position) {
-    return new Response(JSON.stringify({ success: false, error: 'Missing fields' }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  const newId = 'candidate_' + Date.now();
-  const newCandidate = { id: newId, name: body.name, position: body.position };
-
-  const currentCandidates = await getCandidates(env);
-  currentCandidates.push(newCandidate);
-
-  await env.VOTING_KV.put('candidates', JSON.stringify(currentCandidates));
-
-  return new Response(JSON.stringify({ success: true, candidates: currentCandidates }), {
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-// Admin Reset
-if (url.pathname === '/api/admin/reset' && request.method === 'POST') {
-  const auth = request.headers.get('x-admin-password');
-  if (auth !== ADMIN_PASSWORD) return new Response('Unauthorized', { status: 401 });
-
-  // Delete all votes
-  let cursor = null;
-  do {
-    const list = await env.VOTING_KV.list({ prefix: 'voted:', cursor });
-    // KV doesn't support bulk delete, so we do it concurrently
-    await Promise.all(list.keys.map(key => env.VOTING_KV.delete(key.name)));
-    cursor = list.list_complete ? null : list.cursor;
-  } while (cursor);
-
-  // Reset counts
-  await env.VOTING_KV.delete('vote_counts');
-
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-
-// Serve Admin UI
-if (url.pathname === '/admin') {
-  return new Response(renderAdminPage(CANDIDATES), {
-    headers: { 'Content-Type': 'text/html' }
-  });
-}
-
-// Serve the HTML page
-return new Response(renderVotingPage(CANDIDATES), {
-  headers: {
-    'Content-Type': 'text/html',
-    'Set-Cookie': 'voter_id=' + voterId + '; Path=/; Max-Age=31536000; SameSite=Strict'
-}
-});
   }
 };
